@@ -21,14 +21,17 @@ _CANONICAL: Dict[str, License] = {
     # GPL
     "gpl-3.0": License(key="GPL-3.0", name="GNU General Public License v3.0", url="https://www.gnu.org/licenses/gpl-3.0.en.html"),
     "gpl3": License(key="GPL-3.0", name="GNU General Public License v3.0", url="https://www.gnu.org/licenses/gpl-3.0.en.html"),
+    # BSD licenses - map to CC-BY since Thingiverse doesn't have specific BSD options
+    "bsd license": License(key="CC-BY-4.0", name="Creative Commons Attribution 4.0", url="https://creativecommons.org/licenses/by/4.0/"),
+    "bsd": License(key="CC-BY-4.0", name="Creative Commons Attribution 4.0", url="https://creativecommons.org/licenses/by/4.0/"),
 }
 
 _THINGIVERSE_OUTBOUND = {
-    "CC0-1.0": "cc0",
-    "CC-BY-4.0": "cc-by",
-    "CC-BY-SA-4.0": "cc-by-sa",
-    "CC-BY-NC-4.0": "cc-by-nc",
-    "GPL-3.0": "gpl-3.0",
+    "CC0-1.0": "cc-zero",
+    "CC-BY-4.0": "cc",
+    "CC-BY-SA-4.0": "cc-sa",
+    "CC-BY-NC-4.0": "cc-nc",
+    "GPL-3.0": "gpl",
 }
 
 _PRINTABLES_OUTBOUND = {

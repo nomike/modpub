@@ -97,16 +97,36 @@ class ThingiversePlugin(RepositoryPlugin):
             raise ValidationError("mode must be 'create' or 'update'")
 
         if mode == "create":
+            # Clean and validate the payload
+            description = (design.description_md or "").strip()
+            instructions = (design.instructions_md or "").strip()
+            tags = [tag.strip() for tag in (design.tags or []) if tag and tag.strip()]
+
+            # Basic validation
+            if not design.title or not design.title.strip():
+                raise ValidationError("Design title is required")
+
             payload = {
-                "name": design.title,
-                "description": design.description_md,
-                "instructions": design.instructions_md,
-                "tags": design.tags,
+                "name": design.title.strip(),
+                "description": description if description else "A 3D design",
+                "instructions": instructions if instructions else "Print with standard settings",
                 "is_wip": False,
+                "category": "other",  # Default category required by Thingiverse
             }
+
+            # Only add tags if we have any
+            if tags:
+                payload["tags"] = tags
+
             lic_out = map_for_platform(design.license, "thingiverse")
             if lic_out:
                 payload["license"] = lic_out
+            else:
+                # Thingiverse requires a license, default to CC-BY if none found
+                LOGGER.warning("License '%s' not mapped to Thingiverse, using 'cc' as default",
+                             design.license.key if design.license else "None")
+                payload["license"] = "cc"
+            LOGGER.debug("Creating thing with payload: %s", payload)
             created = self.api.create_thing(payload)
             thing_id = str(created.get("id"))
         else:

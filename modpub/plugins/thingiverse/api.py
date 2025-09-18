@@ -44,6 +44,15 @@ class ThingiverseAPI:
         r = self.session.post(url, headers=self._headers(), json=json, timeout=120, **kwargs)
         if r.status_code == 401:
             raise AuthenticationError("Unauthorized; check token")
+        if not r.ok:
+            # Log the error response for debugging
+            try:
+                error_body = r.json() if r.headers.get("Content-Type", "").startswith("application/json") else r.text
+                LOGGER.error("API request failed: %s %s - Status: %d - Response: %s",
+                           r.request.method, url, r.status_code, error_body)
+            except Exception:
+                LOGGER.error("API request failed: %s %s - Status: %d - Raw response: %s",
+                           r.request.method, url, r.status_code, r.text)
         r.raise_for_status()
         ctype = r.headers.get("Content-Type", "")
         return r.json() if ctype.startswith("application/json") else r.text
