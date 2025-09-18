@@ -147,22 +147,74 @@ class ThingiversePlugin(RepositoryPlugin):
                 payload["license"] = lic_out
             self.api.update_thing(thing_id, payload)
 
-        # Upload files via initiate + multipart
+        # Upload files via initiate + multipart + finalize
+        LOGGER.debug(
+            "Starting file upload process. Found %d files to upload", len(design.files)
+        )
         for asset in design.files:
             path = Path(asset.path or "")
             if not path.is_file():
                 continue
-            init = self.api.initiate_file_upload(thing_id, asset.filename, size=path.stat().st_size)
-            upload_url = init.get("upload_url") or init.get("url")
-            form = init.get("form") or init.get("fields") or {}
-            if not upload_url or not form:
-                LOGGER.warning("Upload initiation response missing 'upload_url' or 'form' for %s", asset.filename)
+            LOGGER.debug("Uploading file: %s", asset.filename)
+
+            # Step 1: Initiate upload
+            try:
+                LOGGER.debug(
+                    "Initiating upload for %s (size: %d bytes)",
+                    asset.filename,
+                    path.stat().st_size,
+                )
+                init = self.api.initiate_file_upload(
+                    thing_id, asset.filename, size=path.stat().st_size
+                )
+                LOGGER.debug("Upload initiation response: %s", init)
+                upload_url = init.get("action")
+                form_fields = init.get("fields") or {}
+                success_redirect = form_fields.get("success_action_redirect")
+                LOGGER.debug("Upload URL: %s", upload_url)
+                LOGGER.debug("Form fields keys: %s", list(form_fields.keys()))
+            except Exception as e:
+                LOGGER.error("Failed to initiate upload for %s: %s", asset.filename, e)
                 continue
-            files = {
-                "file": (asset.filename, open(path, "rb"), mimetypes.guess_type(asset.filename)[0] or "application/octet-stream"),
-            }
-            resp = requests.post(upload_url, data=form, files=files, timeout=600)
-            resp.raise_for_status()
+
+            if not upload_url or not form_fields:
+                LOGGER.warning(
+                    "Upload initiation response missing required fields for %s",
+                    asset.filename,
+                )
+                continue
+
+            # Step 2: Upload file to S3
+            with open(path, "rb") as file_handle:
+                files = {
+                    "file": (
+                        asset.filename,
+                        file_handle,
+                        mimetypes.guess_type(asset.filename)[0]
+                        or "application/octet-stream",
+                    )
+                }
+                upload_resp = requests.post(
+                    upload_url, data=form_fields, files=files, timeout=600
+                )
+                upload_resp.raise_for_status()
+                LOGGER.debug("File upload to S3 completed for %s", asset.filename)
+
+            # Step 3: Finalize upload with Thingiverse
+            if success_redirect:
+                finalize_resp = requests.post(
+                    success_redirect,
+                    headers=self.api._headers(),
+                    data=form_fields,
+                    timeout=120,
+                )
+                finalize_resp.raise_for_status()
+                LOGGER.debug("File upload finalized for %s", asset.filename)
+            else:
+                LOGGER.warning(
+                    "No success_action_redirect found for %s, upload may not be properly registered",
+                    asset.filename,
+                )
 
         # TODO: handle image uploads when API support is confirmed
         return thing_id
