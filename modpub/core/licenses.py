@@ -21,9 +21,9 @@ _CANONICAL: Dict[str, License] = {
     # GPL
     "gpl-3.0": License(key="GPL-3.0", name="GNU General Public License v3.0", url="https://www.gnu.org/licenses/gpl-3.0.en.html"),
     "gpl3": License(key="GPL-3.0", name="GNU General Public License v3.0", url="https://www.gnu.org/licenses/gpl-3.0.en.html"),
-    # BSD licenses - map to CC-BY since Thingiverse doesn't have specific BSD options
-    "bsd license": License(key="CC-BY-4.0", name="Creative Commons Attribution 4.0", url="https://creativecommons.org/licenses/by/4.0/"),
-    "bsd": License(key="CC-BY-4.0", name="Creative Commons Attribution 4.0", url="https://creativecommons.org/licenses/by/4.0/"),
+    # BSD licenses
+    "bsd license": License(key="BSD", name="BSD License", url="https://opensource.org/licenses/BSD-3-Clause"),
+    "bsd": License(key="BSD", name="BSD License", url="https://opensource.org/licenses/BSD-3-Clause"),
 }
 
 _THINGIVERSE_OUTBOUND = {
@@ -32,6 +32,7 @@ _THINGIVERSE_OUTBOUND = {
     "CC-BY-SA-4.0": "cc-sa",
     "CC-BY-NC-4.0": "cc-nc",
     "GPL-3.0": "gpl",
+    "BSD": "bsd",
 }
 
 _PRINTABLES_OUTBOUND = {

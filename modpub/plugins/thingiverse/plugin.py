@@ -118,9 +118,14 @@ class ThingiversePlugin(RepositoryPlugin):
             if tags:
                 payload["tags"] = tags
 
-            lic_out = map_for_platform(design.license, "thingiverse")
+            # Normalize the license first
+            normalized_license = normalize_license(design.license) if design.license else None
+            lic_out = map_for_platform(normalized_license, "thingiverse")
+
             if lic_out:
                 payload["license"] = lic_out
+                LOGGER.debug("Using license '%s' mapped to '%s'",
+                           normalized_license.key if normalized_license else "None", lic_out)
             else:
                 # Thingiverse requires a license, default to CC-BY if none found
                 LOGGER.warning("License '%s' not mapped to Thingiverse, using 'cc' as default",
