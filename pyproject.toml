@@ -1,0 +1,31 @@
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "modpub"
+version = "0.2.0"
+description = "Extensible CLI to publish/sync 3D designs across Thingiverse and local directories"
+readme = "README.md"
+authors = [{name = "Nomike Postmann"}]
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = [
+  "requests>=2.31",
+  "typing-extensions>=4.8",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourname/modpub"
+
+[project.scripts]
+modpub = "modpub.cli:main"
+
+[project.entry-points."modpub.plugins"]
+thingiverse = "modpub.plugins.thingiverse.plugin:ThingiversePlugin"
+localdir = "modpub.plugins.localdir.plugin:LocalDirPlugin"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["modpub", "modpub.*"]
