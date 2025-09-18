@@ -15,6 +15,7 @@ from typing import Optional
 from .utils import setup_logging
 from .plugins import load_plugin
 from .core.model import Design
+from .config import create_sample_config, get_config
 
 LOGGER = logging.getLogger("modpub")
 
@@ -50,6 +51,35 @@ def cmd_sync(ns: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_config(ns: argparse.Namespace) -> int:
+    """Handle config commands."""
+    from pathlib import Path
+
+    if ns.action == "init":
+        if ns.location == "home":
+            path = Path.home() / ".modpub.conf"
+            create_sample_config(path)
+            print(f"Created config file at: {path}")
+        elif ns.location == "local":
+            path = Path.cwd() / ".modpub.conf"
+            create_sample_config(path)
+            print(f"Created config file at: {path}")
+        else:
+            # Just print sample
+            print(create_sample_config())
+    elif ns.action == "show":
+        config = get_config()
+        token = config.get_thingiverse_token()
+        if token:
+            # Mask the token for security
+            masked = token[:4] + "..." + token[-4:] if len(token) > 8 else "***"
+            print(f"Thingiverse token: {masked}")
+        else:
+            print("Thingiverse token: Not configured")
+
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="modpub", description="3D model publisher")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -60,6 +90,13 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--to", dest="to", required=True,
                     help="Destination locator e.g. localdir:/path or thingiverse:new")
     sp.set_defaults(func=cmd_sync)
+
+    cp = sub.add_parser("config", help="Manage configuration")
+    cp.add_argument("action", choices=["init", "show"],
+                    help="init: create sample config, show: display current config")
+    cp.add_argument("--location", choices=["home", "local"],
+                    help="Where to create config file (for init action)")
+    cp.set_defaults(func=cmd_config)
 
     return p
 

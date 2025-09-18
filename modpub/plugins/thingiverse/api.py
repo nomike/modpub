@@ -1,11 +1,11 @@
 from __future__ import annotations
 import logging
-import os
 from typing import Any, Dict, List, Optional
 
 import requests
 
 from ...exceptions import AuthenticationError, NotFoundError
+from ...config import get_config
 
 LOGGER = logging.getLogger("modpub.thingiverse.api")
 
@@ -18,9 +18,13 @@ class ThingiverseAPI:
 
     def __init__(self, access_token: Optional[str] = None, session: Optional[requests.Session] = None) -> None:
         self.session = session or requests.Session()
-        self.token = access_token or os.getenv("THINGIVERSE_TOKEN")
+        # Priority: 1. Passed parameter, 2. Config system (env var, current dir, home dir)
+        self.token = access_token
         if not self.token:
-            raise AuthenticationError("THINGIVERSE_TOKEN not set; provide access_token or env var")
+            config = get_config()
+            self.token = config.get_thingiverse_token()
+        if not self.token:
+            raise AuthenticationError("THINGIVERSE_TOKEN not set; provide access_token, env var, or config file")
 
     def _headers(self) -> Dict[str, str]:
         return {"Authorization": f"Bearer {self.token}", "Accept": "application/json"}
