@@ -88,6 +88,7 @@ class LocalDirPlugin(RepositoryPlugin):
         for f in design.files:
             if f.path:
                 p = (root / f.path).resolve() if not Path(f.path).is_absolute() else Path(f.path)
+                f.path = str(p)  # Update path to resolved absolute path
             else:
                 p = files_dir / f.filename
                 f.path = str(p)
@@ -96,6 +97,7 @@ class LocalDirPlugin(RepositoryPlugin):
         for im in design.images:
             if im.path:
                 p = (root / im.path).resolve() if not Path(im.path).is_absolute() else Path(im.path)
+                im.path = str(p)  # Update path to resolved absolute path
             else:
                 p = images_dir / im.filename
                 im.path = str(p)
