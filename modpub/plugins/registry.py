@@ -9,14 +9,14 @@ def register(name: str, cls):
 
 def load_plugin(name: str):
     # Try entry points first
-    try:
-        eps = entry_points(group="modpub.plugins")
-        for ep in eps:
-            if ep.name == name:
-                return ep.load()()
-    except Exception:
-        pass
+    eps = entry_points(group="modpub.plugins")
+    for ep in eps:
+        if ep.name == name:
+            plugin_class = ep.load()
+            return plugin_class()
+
     # Fallback registry
     if name in _REGISTRY:
         return _REGISTRY[name]()
+
     raise ValidationError(f"Unknown plugin: {name}")

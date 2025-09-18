@@ -30,22 +30,15 @@ _PRINT_INSTR_HEADINGS = [
 def _render_readme(title: str, description: str, instructions: str) -> str:
     lines = []
     if title:
-        lines.append(f"# {title}
-")
+        lines.append(f"# {title}\n")
     lines.append(MD_DESC_BEGIN)
-    lines.append((description or '').rstrip() + "
-")
-    lines.append(MD_DESC_END + "
-")
-    lines.append("## Print Instructions
-")
+    lines.append((description or '').rstrip() + "\n")
+    lines.append(MD_DESC_END + "\n")
+    lines.append("## Print Instructions\n")
     lines.append(MD_INSTR_BEGIN)
-    lines.append((instructions or '').rstrip() + "
-")
-    lines.append(MD_INSTR_END + "
-")
-    return "
-".join(lines)
+    lines.append((instructions or '').rstrip() + "\n")
+    lines.append(MD_INSTR_END + "\n")
+    return "\n".join(lines)
 
 def _extract_between(text: str, start: str, end: str) -> str | None:
     s = text.find(start)
@@ -55,8 +48,7 @@ def _extract_between(text: str, start: str, end: str) -> str | None:
     e = text.find(end, s)
     if e == -1:
         return None
-    return text[s:e].strip('
-')
+    return text[s:e].strip('\n')
 
 def _parse_readme(text: str) -> tuple[str, str]:
     # 1) Explicit markers
@@ -70,8 +62,7 @@ def _parse_readme(text: str) -> tuple[str, str]:
         m = re.search(pat, text, flags=re.IGNORECASE | re.MULTILINE)
         if m:
             start_instr = m.start()
-            line_end = text.find('
-', m.end())
+            line_end = text.find('\n', m.end())
             if line_end == -1:
                 return (text[:start_instr].strip(), "")
             return (text[:start_instr].strip(), text[line_end+1:].strip())
