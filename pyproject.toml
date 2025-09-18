@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourname/modpub"
+Homepage = "https://github.com/nomike/modpub"
 
 [project.scripts]
 modpub = "modpub.cli:main"
