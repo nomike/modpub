@@ -10,7 +10,7 @@ import requests
 
 from ...core.model import Design, Author, License, FileAsset, ImageAsset
 from ...core.storage import ensure_dir, sha256_file
-from ...core.licenses import normalize_license, map_for_platform
+from ...core.licenses import normalize_license, map_for_platform, map_from_platform, register_platform_license_mapping, register_platform_inbound_mapping
 from ...exceptions import ValidationError
 from ..repository import RepositoryPlugin
 from .api import ThingiverseAPI
@@ -22,7 +22,39 @@ class ThingiversePlugin(RepositoryPlugin):
     name = "thingiverse"
 
     def __init__(self) -> None:
+        self._register_license_mappings()
         self.api = ThingiverseAPI()
+
+    @classmethod
+    def register_license_mappings(cls) -> None:
+        """Register Thingiverse-specific license mappings."""
+        # Register mappings from canonical to Thingiverse format
+        register_platform_license_mapping("thingiverse", "CC0-1.0", "cc-zero")
+        register_platform_license_mapping("thingiverse", "CC-BY-4.0", "cc")
+        register_platform_license_mapping("thingiverse", "CC-BY-SA-4.0", "cc-sa")
+        register_platform_license_mapping("thingiverse", "CC-BY-NC-4.0", "cc-nc")
+        register_platform_license_mapping("thingiverse", "CC-BY-ND-4.0", "cc-nd")
+        register_platform_license_mapping("thingiverse", "CC-BY-NC-SA-4.0", "cc-nc-sa")
+        register_platform_license_mapping("thingiverse", "CC-BY-NC-ND-4.0", "cc-nc-nd")
+        register_platform_license_mapping("thingiverse", "GPL-3.0", "gpl")
+        register_platform_license_mapping("thingiverse", "LGPL-2.1", "lgpl")
+        register_platform_license_mapping("thingiverse", "BSD", "bsd")
+
+        # Register additional inbound mappings for verbose license names Thingiverse returns
+        register_platform_inbound_mapping("thingiverse", "creative commons - public domain dedication", "CC0-1.0")
+        register_platform_inbound_mapping("thingiverse", "creative commons - attribution", "CC-BY-4.0")
+        register_platform_inbound_mapping("thingiverse", "creative commons - attribution - share alike", "CC-BY-SA-4.0")
+        register_platform_inbound_mapping("thingiverse", "creative commons - attribution - no derivatives", "CC-BY-ND-4.0")
+        register_platform_inbound_mapping("thingiverse", "creative commons - attribution - non-commercial", "CC-BY-NC-4.0")
+        register_platform_inbound_mapping("thingiverse", "creative commons - attribution - non-commercial - share alike", "CC-BY-NC-SA-4.0")
+        register_platform_inbound_mapping("thingiverse", "creative commons - attribution - non-commercial - no derivatives", "CC-BY-NC-ND-4.0")
+        register_platform_inbound_mapping("thingiverse", "gnu - gpl", "GPL-3.0")
+        register_platform_inbound_mapping("thingiverse", "gnu - lgpl", "LGPL-2.1")
+        register_platform_inbound_mapping("thingiverse", "bsd license", "BSD")
+
+    def _register_license_mappings(self) -> None:
+        """Register license mappings when plugin is instantiated."""
+        self.register_license_mappings()
 
     def read(self, locator: str) -> Design:
         thing_id = locator.strip()
@@ -39,7 +71,13 @@ class ThingiversePlugin(RepositoryPlugin):
         license_obj = None
         lic_name = data.get("license") or data.get("license_name")
         if lic_name:
-            license_obj = normalize_license(License(key=str(lic_name), name=str(lic_name)))
+            # First try to map from Thingiverse-specific license to canonical
+            canonical_key = map_from_platform(str(lic_name), "thingiverse")
+            if canonical_key:
+                license_obj = normalize_license(canonical_key)
+            else:
+                # Fallback to direct normalization for unknown licenses
+                license_obj = normalize_license(License(key=str(lic_name), name=str(lic_name)))
 
         design = Design(
             title=data.get("name", f"thing:{thing_id}"),
