@@ -58,3 +58,13 @@ The main command is `modpub sync --from <source> --to <dest>` where:
 - Falls back to heuristic heading detection if markers absent
 - License keys are canonicalized (e.g., `CC-BY-4.0`) and mapped to platform-specific IDs
 - File operations preserve SHA256 hashes for integrity checking
+
+### License Mapping System
+modpub includes an extensible license mapping system (`modpub.core.licenses`) that:
+- Normalizes various license input formats to canonical SPDX-like keys (e.g., `CC-BY-4.0`)
+- Maps canonical licenses to platform-specific identifiers (e.g., `CC-BY-4.0` → `"cc"` on Thingiverse)
+- Supports reverse mapping when reading from platforms back to canonical form
+- Each plugin defines its own license mappings via `register_platform_license_mapping()`
+- Plugins register mappings in their `register_license_mappings()` class method
+- Core license system has NO hardcoded platform mappings - all mappings come from plugins
+- Example: Thingiverse plugin maps `BSD` → `"bsd"`, while a Printables plugin might map `BSD` → `"bsd-license"`
